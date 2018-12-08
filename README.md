@@ -1,4 +1,3 @@
-
 ##### Project Description(spider1.py)
 
 
@@ -37,3 +36,4 @@
 {'url': 'http://gdchzz.nasg.gov.cn/PorttalWeb/UnitBaseInfoView.aspx?&ID=85', 'company': '深圳市活力天汇科技股份有限公司', 'qulification_grade': '乙级', 'address': '深圳市南山区粤海街道高新南九道10号深圳湾科技生态园10栋B座13层01-08号', 'postcode': '518057', 'contact': '陈水燕', 'phone': '0755-86022762', 'certification': '乙测资字4410856', 'certification_issuancedate': '2018/5/28', 'deadline_time': '2019/12/31', 'bisiness': '乙级：互联网地图服务：地理位置定位、地理信息上传标注。***'}
 
 ````
+
