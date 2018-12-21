@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import Select
 from bs4 import BeautifulSoup
 import pymysql
 
-
+idss = []
 conn = pymysql.connect(
     host='localhost',  # mysql服务器地址
     port=3306,  # 端口号
@@ -58,7 +58,7 @@ search.click()
 search_report = browser.find_element_by_id('BtnSearch')
 
 # 匹配 id
-ID_RE = re.compile(r'onclick="ShowInfo\((\d+),2\)"')
+ID_RE = re.compile(r'onclick="ShowInfo\((\d+),.*?\)"')
 TD_RE = re.compile(r'<td class="tdleft">(.*?)</td>')
 
 # ['企业名称', '资质等级', 'address', 'postcode', '联系人', '联系电话', '资质证号', '发证日期', '证书有效期', '单位业务范围']
@@ -71,43 +71,52 @@ for province_index in range(1, len(select_province.options)):
     time.sleep(1)
 
     # 58
-    for page in range(1, 58):
+    for page in range(1, 59):
         ss = '__doPostBack("PageTurnControl1$ANPager", "%d")' % page
         browser.execute_script(ss)
         time.sleep(2)
         ids = ID_RE.findall(browser.page_source)
         for id in ids:
+            print(id)
             url = "http://gdchzz.nasg.gov.cn/PorttalWeb/UnitBaseInfoView.aspx?&ID=" + str(id)
-            browser.get(url)
-            bps = browser.page_source
-            soup = BeautifulSoup(bps, 'lxml', from_encoding='utf-8')
-            title = soup.find('span', id='lllName')
-            items = soup.find_all('td', class_='tdright')
-            result = dict()
-            result[pros_df[0]] = url
-            result[pros_df[1]] = title.get_text()
-            result[pros_df[2]] = items[0].get_text().strip()
-            result[pros_df[3]] = soup.find('span', id="lblOfficeAddress").get_text()
-            result[pros_df[4]] = items[2].get_text().strip()
-            result[pros_df[5]] = items[3].get_text().strip()
-            result[pros_df[6]] = items[4].get_text().strip()
-            result[pros_df[7]] = items[5].get_text().strip()
-            result[pros_df[8]] = items[6].get_text().strip()
-            result[pros_df[9]] = items[7].get_text().strip()
-            result[pros_df[10]] = items[8].get_text().strip("***\n")
-            print(result)
-            sqla = '''
-                insert into cehuizizhi_gd1(url, company, qulification_grade, address, postcode, contact,
-                                phone, certification, certification_issuancedate,  deadline_time, bisiness)
-                                VALUES (%s,%s,%s,%s,%s, %s,  %s,%s, %s, %s, %s);
-            '''
-            b = cur.execute(sqla, (result[pros_df[0]], result[pros_df[1]], result[pros_df[2]], result[pros_df[3]],
-                                   result[pros_df[4]], result[pros_df[5]], result[pros_df[6]], result[pros_df[7]],
-                                   result[pros_df[8]], result[pros_df[9]], result[pros_df[10]]))
-            conn.commit()
-        browser.get('http://gdchzz.nasg.gov.cn/Index/QueryList.aspx')
+            if url not in idss:
+                idss.append(url)
     time.sleep(1)
 
+
+def crawl(url):
+    browser.get(url)
+    bps = browser.page_source
+    soup = BeautifulSoup(bps, 'lxml', from_encoding='utf-8')
+    title = soup.find('span', id='lllName')
+    items = soup.find_all('td', class_='tdright')
+    result = dict()
+    result[pros_df[0]] = url
+    result[pros_df[1]] = title.get_text()
+    result[pros_df[2]] = items[0].get_text().strip()
+    result[pros_df[3]] = soup.find('span', id="lblOfficeAddress").get_text()
+    result[pros_df[4]] = items[2].get_text().strip()
+    result[pros_df[5]] = items[3].get_text().strip()
+    result[pros_df[6]] = items[4].get_text().strip()
+    result[pros_df[7]] = items[5].get_text().strip()
+    result[pros_df[8]] = items[6].get_text().strip()
+    result[pros_df[9]] = items[7].get_text().strip()
+    result[pros_df[10]] = items[8].get_text().strip("***\n")
+    # print(result)
+    sqla = '''
+                    insert into cehuizizhi_gd1(url, company, qulification_grade, address, postcode, contact,
+                                    phone, certification, certification_issuancedate,  deadline_time, bisiness)
+                                    VALUES (%s,%s,%s,%s,%s, %s,  %s,%s, %s, %s, %s);
+                '''
+    b = cur.execute(sqla, (result[pros_df[0]], result[pros_df[1]], result[pros_df[2]], result[pros_df[3]],
+                           result[pros_df[4]], result[pros_df[5]], result[pros_df[6]], result[pros_df[7]],
+                           result[pros_df[8]], result[pros_df[9]], result[pros_df[10]]))
+    conn.commit()
+    print(result)
+
+print("Length: ", len(idss))
+for url in idss:
+    crawl(url)
 cur.close()
 conn.close()
 

@@ -26,25 +26,32 @@ a = cur.execute(sqla)
 conn.commit()
 
 browser = webdriver.Chrome()
-for i in range(1, 24):
-    url = "http://zwfw.nasg.gov.cn/search/zzdw?keyWord=&pageIndex=" + str(i) + "&st=1&dwlx=38&zzdj=4&provice=44"
-    browser.get(url)
-    bps = browser.page_source
-    soup = BeautifulSoup(bps, 'lxml', from_encoding='utf-8')  # 隐式等待时间
-    browser.implicitly_wait(3)
-    result = {}
-    titles = soup.find_all('span', class_='minchen')
-    infos = soup.find_all('span', class_='cang')
-    i = 0
-    for j in range(0, len(infos), 4):
-        print(infos[j].get_text().strip())
-        sqla = '''
-                       insert into cehuizizhi_gd3(name, qulification_code,type,  qulification_grade, position)
-                                       VALUES (%s,%s,%s,%s,%s);
-               '''
-        cur.execute(sqla, (titles[i].get_text().strip(), infos[j].get_text().strip(), infos[j+1].get_text().strip(),
-                           infos[j+2].get_text().strip(), infos[j+3].get_text().strip()))
-        conn.commit()
-        i += 1
+for k in range(2, 5):
+    # url = 'http://zwfw.nasg.gov.cn/search/zzdw?keyWord=&zzdj=' + str(j) + '&provice=44'
+    for i in range(1, 44):
+        # url = "http://zwfw.nasg.gov.cn/search/zzdw?keyWord=&pageIndex=" + str(i) + "&zzdj=1"
+        url = 'http://zwfw.nasg.gov.cn/search/zzdw?keyWord=&pageIndex='+str(i) + '&zzdj=' + str(k) + '&provice=44'
+        browser.get(url)
+        bps = browser.page_source
+        soup = BeautifulSoup(bps, 'lxml', from_encoding='utf-8')  # 隐式等待时间
+        browser.implicitly_wait(3)
+        result = {}
+        titles = soup.find_all('span', class_='minchen')
+        infos = soup.find_all('span', class_='cang')
+        i = 0
+        if len(titles) == 0:
+            break
+        for j in range(0, len(infos), 4):
+            print(infos[j].get_text().strip())
+            sqla = '''
+                           insert into cehuizizhi_gd3(name, qulification_code,type,  qulification_grade, position)
+                                           VALUES (%s,%s,%s,%s,%s);
+                   '''
+            cur.execute(sqla,
+                        (titles[i].get_text().strip(), infos[j].get_text().strip(), infos[j + 1].get_text().strip(),
+                         infos[j + 2].get_text().strip(), infos[j + 3].get_text().strip()))
+            conn.commit()
+            i += 1
+
 cur.close()
 conn.close()
